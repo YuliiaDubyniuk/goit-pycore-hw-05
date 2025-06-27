@@ -2,19 +2,6 @@ import sys
 from collections import defaultdict
 
 
-def get_log_file_path() -> str:
-    f_path = ""
-    if len(sys.argv) >= 2:
-        f_path = sys.argv[1]
-        log_level = sys.argv[2] if len(sys.argv) > 2 else None
-    else:
-        print("File path has not been provided")
-    return f_path, log_level
-
-
-log_file_path, log_level = get_log_file_path()
-
-
 def parse_log_line(line: str) -> dict[str, str]:
     """Parse log file line to dictionary"""
     line_data_list = line.split(" ")
@@ -28,29 +15,30 @@ def parse_log_line(line: str) -> dict[str, str]:
 
 
 def load_logs(file_path: str) -> list[dict[str, str]]:
+    """Load file content into list of dictionaries"""
     try:
-        with open(file_path, encoding="utf8") as f:
+        with open(file_path, mode="r", encoding="utf8") as f:
             return [parse_log_line(line.strip()) for line in f]
 
     except FileNotFoundError as e:
         print("File not found:", e)
-        return []
     except UnicodeDecodeError as e:
         print("Can not decode file content:", e)
-        return []
     except Exception as e:
         print("Unexpected error while opening/reading file:", e)
-        return []
 
 
 def filter_logs_by_level(logs: list, level: str) -> list[str]:
-    """Filter logs by level if provided"""
+    """Filter logs by level, if level name is provided.
+       Print filtered logs' information
+    """
     for log in logs:
-        if log["level"].upper() == level:
+        if log["level"] == level:
             print(f"{log["date"]} {log["time"]} - {log["message"]}")
 
 
 def count_logs_by_level(logs: list) -> dict:
+    """Count logs by their level and display result to user"""
     logs_by_level = defaultdict(int)
     for log in logs:
         logs_by_level[log["level"]] += 1
@@ -59,8 +47,9 @@ def count_logs_by_level(logs: list) -> dict:
 
 
 def display_log_counts(counts: dict[str, int]):
-    print(f"{'Log Level':<20} | {'Quantity':<10}")
-    print(f"{'-'*20} | {'-'*10}")
+    """Display a formatted table of log level counts"""
+    print(f"{'Log Level':<10} | {'Quantity':<10}")
+    print(f"{'-'*10} | {'-'*10}")
 
-    for level, count in sorted(counts.items()):
-        print(f"{level:<20} | {count:<10}")
+    for level, count in sorted(counts.items(), key=lambda i: i[1], reverse=True):
+        print(f"{level:<10} | {count:<10}")
